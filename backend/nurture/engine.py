@@ -60,7 +60,8 @@ class NurtureEngine:
         user_input: str,
         nurture_state: NurtureState,
         conversation_history: List[Dict[str, str]] = None,
-        assistant_response: Optional[str] = None
+        assistant_response: Optional[str] = None,
+        extra_context: Optional[str] = None
     ) -> Tuple[str, NurtureState, InteractionMetadata]:
         """
         Process a single interaction through the Nurture Layer.
@@ -72,6 +73,7 @@ class NurtureEngine:
             nurture_state: Current nurture state
             conversation_history: Previous conversation messages
             assistant_response: Pre-generated response (if None, will generate)
+            extra_context: Additional context to inject (e.g., from Experiential Layer)
         
         Returns:
             Tuple of (response, updated_state, metadata)
@@ -90,6 +92,10 @@ class NurtureEngine:
             include_phase_info=True,
             include_env_summary=True
         )
+        
+        # Inject experiential context if provided
+        if extra_context:
+            context = context + f"\n\n[Session Context]\n{extra_context}\n"
         
         # Step 2: Generate response if not provided
         if assistant_response is None:

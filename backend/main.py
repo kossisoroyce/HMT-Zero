@@ -21,6 +21,10 @@ from nurture.llm import (
     get_ollama_client, OllamaClient,
     get_openrouter_client, set_openrouter_client, OpenRouterClient
 )
+from experience import (
+    ExperientialEngine, ExperientialConfig, DEFAULT_EXPERIENTIAL_CONFIG,
+    ExperientialState, initialize_experiential_state
+)
 
 
 # Initialize FastAPI app
@@ -42,6 +46,9 @@ app.add_middleware(
 # Initialize components
 store = NurtureStore(storage_dir="./nurture_data")
 engine = NurtureEngine(config=DEFAULT_CONFIG)
+
+# Experiential Layer state (session-based)
+experiential_sessions: Dict[str, ExperientialEngine] = {}
 
 
 # Request/Response models
@@ -97,6 +104,36 @@ class StateResponse(BaseModel):
     current_threshold: float
     created_at: str
     last_updated: str
+
+
+class ExperientialStateResponse(BaseModel):
+    session_id: str
+    interaction_count: int
+    topic_summary: str
+    emotion_summary: str
+    user_summary: str
+    facts_count: int
+    open_questions: int
+    active_commitments: int
+    session_familiarity: float
+    total_sessions: int
+    context_string: str
+
+
+class IntegratedInteractionRequest(BaseModel):
+    """Request for integrated Nurture + Experience interaction."""
+    instance_id: str
+    session_id: str
+    user_input: str
+    openrouter_api_key: Optional[str] = None
+    model_name: str = "mistralai/mistral-7b-instruct:free"
+
+
+class IntegratedInteractionResponse(BaseModel):
+    response: str
+    nurture_state: StateResponse
+    experiential_state: ExperientialStateResponse
+    metadata: Dict[str, Any]
 
 
 class InteractionResponse(BaseModel):
@@ -518,6 +555,248 @@ async def control_interaction(request: ControlInteractionRequest):
         "model": model_used,
         "note": "Control condition - no Nurture Layer metrics"
     }
+
+
+# ============== EXPERIENTIAL LAYER ENDPOINTS ==============
+
+@app.post("/experience/session")
+async def create_experiential_session(instance_id: str, session_id: str):
+    """
+    Create a new experiential session linked to a nurture instance.
+    """
+    # Load nurture state to prime experiential engine
+    nurture_state = store.load(instance_id)
+    if nurture_state is None:
+        raise HTTPException(status_code=404, detail=f"Nurture instance {instance_id} not found")
+    
+    # Create experiential engine with nurture integration
+    exp_engine = ExperientialEngine(
+        config=DEFAULT_EXPERIENTIAL_CONFIG,
+        nurture_state=nurture_state
+    )
+    exp_engine.initialize_session(session_id=session_id)
+    
+    # Store in session dict
+    experiential_sessions[session_id] = exp_engine
+    
+    return {
+        "status": "created",
+        "session_id": session_id,
+        "instance_id": instance_id,
+        "primed_from_nurture": True
+    }
+
+
+@app.get("/experience/session/{session_id}", response_model=ExperientialStateResponse)
+async def get_experiential_session(session_id: str):
+    """Get current experiential state for a session."""
+    if session_id not in experiential_sessions:
+        raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
+    
+    exp_engine = experiential_sessions[session_id]
+    return _experiential_to_response(exp_engine)
+
+
+@app.delete("/experience/session/{session_id}")
+async def end_experiential_session(session_id: str):
+    """
+    End an experiential session and get persistent traces.
+    """
+    if session_id not in experiential_sessions:
+        raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
+    
+    exp_engine = experiential_sessions[session_id]
+    traces, promotion_candidate = exp_engine.end_session()
+    
+    # Clean up
+    del experiential_sessions[session_id]
+    
+    return {
+        "status": "ended",
+        "session_id": session_id,
+        "persistent_traces": {
+            "session_count": traces.session_count if traces else 0,
+            "familiarity_score": traces.familiarity_score if traces else 0,
+        },
+        "promotion_candidate": promotion_candidate
+    }
+
+
+@app.post("/integrated/interact", response_model=IntegratedInteractionResponse)
+async def integrated_interaction(request: IntegratedInteractionRequest):
+    """
+    Process an interaction through BOTH Nurture and Experiential layers.
+    
+    This is the full CACA stack:
+    1. Nurture Layer processes for character formation
+    2. Experiential Layer tracks session context
+    3. Both contexts are combined for response generation
+    """
+    # Set up OpenRouter client
+    if request.openrouter_api_key:
+        client = set_openrouter_client(request.session_id, request.openrouter_api_key, request.model_name)
+    else:
+        client = get_client(request.session_id)
+        if not client or not client.is_configured():
+            raise HTTPException(status_code=401, detail="OpenRouter API key required")
+    
+    # Load nurture state
+    nurture_state = store.load(request.instance_id)
+    if nurture_state is None:
+        raise HTTPException(status_code=404, detail=f"Instance {request.instance_id} not found")
+    
+    # Get or create experiential session
+    if request.session_id not in experiential_sessions:
+        exp_engine = ExperientialEngine(
+            config=DEFAULT_EXPERIENTIAL_CONFIG,
+            nurture_state=nurture_state
+        )
+        exp_engine.initialize_session(session_id=request.session_id)
+        experiential_sessions[request.session_id] = exp_engine
+    else:
+        exp_engine = experiential_sessions[request.session_id]
+        exp_engine.nurture_state = nurture_state  # Update nurture reference
+    
+    # Get experiential context
+    exp_context = exp_engine.get_context_for_prompt()
+    
+    # Set the model function on the nurture engine
+    engine.set_model_fn(client.generate)
+    
+    # Get conversation history
+    conversation_history = store.get_conversation_history(request.instance_id, limit=10)
+    
+    # Process through Nurture Layer (includes LLM call with character context)
+    try:
+        response, updated_nurture, metadata = engine.process_interaction(
+            user_input=request.user_input,
+            nurture_state=nurture_state,
+            conversation_history=conversation_history,
+            extra_context=exp_context  # Inject experiential context
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"LLM error: {str(e)}")
+    
+    # Process through Experiential Layer (post-response)
+    exp_metadata = exp_engine.process_interaction(
+        user_input=request.user_input,
+        assistant_response=response
+    )
+    
+    # Save updated nurture state
+    store.save(updated_nurture)
+    
+    # Save interaction to history
+    store.save_interaction(
+        instance_id=request.instance_id,
+        user_input=request.user_input,
+        assistant_response=response,
+        metadata={
+            'significance_score': metadata.significance_score,
+            'was_evaluated': metadata.was_evaluated,
+            'delta_magnitude': metadata.delta_magnitude,
+            'phase_after': metadata.phase_after,
+            'stability': updated_nurture.stability,
+            'experiential': exp_metadata
+        }
+    )
+    
+    return IntegratedInteractionResponse(
+        response=response,
+        nurture_state=_state_to_response(updated_nurture),
+        experiential_state=_experiential_to_response(exp_engine),
+        metadata={
+            'nurture': {
+                'significance_score': metadata.significance_score,
+                'was_evaluated': metadata.was_evaluated,
+                'phase': metadata.phase_after,
+            },
+            'experiential': exp_metadata,
+            'model': request.model_name
+        }
+    )
+
+
+@app.get("/experience/context/{session_id}")
+async def get_experiential_context(session_id: str):
+    """Get the current experiential context string for prompt injection."""
+    if session_id not in experiential_sessions:
+        raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
+    
+    exp_engine = experiential_sessions[session_id]
+    return {
+        "session_id": session_id,
+        "context": exp_engine.get_context_for_prompt(),
+        "summary": exp_engine.get_state_summary()
+    }
+
+
+@app.get("/experience/facts/{session_id}")
+async def get_session_facts(session_id: str):
+    """Get salient facts from the current session."""
+    if session_id not in experiential_sessions:
+        raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
+    
+    exp_engine = experiential_sessions[session_id]
+    facts = exp_engine.state.working_memory.salient_facts
+    
+    return {
+        "session_id": session_id,
+        "facts": [f.to_dict() for f in facts],
+        "count": len(facts)
+    }
+
+
+@app.get("/experience/questions/{session_id}")
+async def get_session_questions(session_id: str):
+    """Get open questions from the current session."""
+    if session_id not in experiential_sessions:
+        raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
+    
+    exp_engine = experiential_sessions[session_id]
+    questions = exp_engine.state.working_memory.open_questions
+    
+    return {
+        "session_id": session_id,
+        "questions": [q.to_dict() for q in questions],
+        "open_count": len([q for q in questions if not q.resolved]),
+        "resolved_count": len([q for q in questions if q.resolved])
+    }
+
+
+@app.get("/experience/commitments/{session_id}")
+async def get_session_commitments(session_id: str):
+    """Get commitments from the current session."""
+    if session_id not in experiential_sessions:
+        raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
+    
+    exp_engine = experiential_sessions[session_id]
+    commitments = exp_engine.state.working_memory.commitments
+    
+    return {
+        "session_id": session_id,
+        "commitments": [c.to_dict() for c in commitments],
+        "active_count": len([c for c in commitments if not c.fulfilled]),
+        "fulfilled_count": len([c for c in commitments if c.fulfilled])
+    }
+
+
+def _experiential_to_response(exp_engine: ExperientialEngine) -> ExperientialStateResponse:
+    """Convert ExperientialEngine state to response model."""
+    summary = exp_engine.get_state_summary()
+    return ExperientialStateResponse(
+        session_id=summary.get('session_id', ''),
+        interaction_count=summary.get('interaction_count', 0),
+        topic_summary=summary.get('topic_summary', ''),
+        emotion_summary=summary.get('emotion_summary', ''),
+        user_summary=summary.get('user_summary', ''),
+        facts_count=summary.get('facts_count', 0),
+        open_questions=summary.get('open_questions', 0),
+        active_commitments=summary.get('active_commitments', 0),
+        session_familiarity=summary.get('session_familiarity', 0.0),
+        total_sessions=summary.get('total_sessions', 0),
+        context_string=exp_engine.get_context_for_prompt()
+    )
 
 
 def _state_to_response(state) -> StateResponse:

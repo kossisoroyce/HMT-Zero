@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react'
-import { Brain, Plus, Trash2, Send, Activity, Settings, MessageSquare, BarChart3, Key, Download, Beaker } from 'lucide-react'
+import { Brain, Plus, Trash2, Send, Activity, Settings, MessageSquare, BarChart3, Key, Download, Beaker, Sparkles } from 'lucide-react'
 import StanceRadar from './components/StanceRadar'
 import PhaseIndicator from './components/PhaseIndicator'
 import InteractionPanel from './components/InteractionPanel'
 import MetricsPanel from './components/MetricsPanel'
 import HistoryPanel from './components/HistoryPanel'
 import ControlExperiment from './components/ControlExperiment'
+import ExperientialPanel from './components/ExperientialPanel'
 
 const API_BASE = '/api'
 
@@ -18,6 +19,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('interact')
   const [sessionId] = useState(() => crypto.randomUUID())
   const [apiKeyConfigured, setApiKeyConfigured] = useState(false)
+  const [openrouterApiKey, setOpenrouterApiKey] = useState('')
 
   useEffect(() => {
     fetchInstances()
@@ -237,6 +239,7 @@ function App() {
                   <div className="flex gap-1">
                     {[
                       { id: 'interact', icon: MessageSquare, label: 'Interact' },
+                      { id: 'experience', icon: Sparkles, label: 'Experience' },
                       { id: 'metrics', icon: BarChart3, label: 'Metrics' },
                       { id: 'history', icon: Activity, label: 'History' },
                       { id: 'control', icon: Beaker, label: 'Control Exp' },
@@ -311,6 +314,14 @@ function App() {
                       </div>
                     </div>
                   </div>
+                )}
+                {activeTab === 'experience' && (
+                  <ExperientialPanel
+                    instanceId={selectedInstance}
+                    sessionId={sessionId}
+                    apiKeyConfigured={apiKeyConfigured}
+                    openrouterApiKey={openrouterApiKey}
+                  />
                 )}
                 {activeTab === 'metrics' && (
                   <MetricsPanel instanceState={instanceState} />

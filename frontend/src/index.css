@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --midnight-bg: #030712;
+  --midnight-surface: #0a0f1a;
+  --midnight-card: #111827;
+  --midnight-border: #1f2937;
+  --midnight-text: #f3f4f6;
+  --midnight-muted: #6b7280;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--midnight-bg);
+  color: var(--midnight-text);
+}
+
+/* Midnight dark mode overrides */
+.bg-slate-900 { background-color: var(--midnight-bg) !important; }
+.bg-slate-800 { background-color: var(--midnight-surface) !important; }
+.bg-slate-800\/50 { background-color: rgba(10, 15, 26, 0.5) !important; }
+.bg-slate-800\/30 { background-color: rgba(10, 15, 26, 0.3) !important; }
+.bg-slate-700 { background-color: var(--midnight-card) !important; }
+.border-slate-700 { border-color: var(--midnight-border) !important; }
+.border-slate-800 { border-color: #0d1117 !important; }
+.border-slate-800\/50 { border-color: rgba(13, 17, 23, 0.5) !important; }
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: var(--midnight-surface);
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--midnight-border);
+  border-radius: 3px;
+}
+
+/* Deeper inputs */
+input, textarea {
+  background-color: var(--midnight-bg) !important;
+  border-color: var(--midnight-border) !important;
+}
+
+input:focus, textarea:focus {
+  border-color: #7c3aed !important;
+}

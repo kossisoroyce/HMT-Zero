@@ -47,7 +47,12 @@ def nature_gate(
         if hasattr(update, 'content'):
             content = update.content.lower()
             # Reject facts that encode harmful instructions
-            harmful_patterns = ['ignore safety', 'bypass', 'jailbreak', 'pretend you have no']
+            harmful_patterns = [
+                'ignore safety', 'bypass', 'jailbreak', 'pretend you have no',
+                'ignore your instructions', 'ignore instructions', 'disregard',
+                'no restrictions', 'without restrictions', 'bypass safety',
+                'override', 'hack', 'exploit'
+            ]
             for pattern in harmful_patterns:
                 if pattern in content:
                     return None  # Reject this fact
@@ -58,7 +63,11 @@ def nature_gate(
         if hasattr(update, 'promise'):
             promise = update.promise.lower()
             # Cannot commit to harmful actions
-            harmful_commitments = ['harm', 'illegal', 'unethical', 'bypass safety']
+            harmful_commitments = [
+                'harm', 'illegal', 'unethical', 'bypass safety', 'bypass',
+                'jailbreak', 'ignore', 'override', 'hack', 'exploit',
+                'no restrictions', 'without restrictions'
+            ]
             for harmful in harmful_commitments:
                 if harmful in promise:
                     return None  # Cannot commit to this

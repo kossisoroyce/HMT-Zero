@@ -1,4 +1,4 @@
-# CACA: Continuous AI Consciousness Architecture
+# HMT-Zero: Human-Machine Teaming Research Platform
 
 <p align="center">
   <img src="HMT Zero Logo.svg" alt="HMT Zero Logo" width="200"/>
@@ -52,8 +52,8 @@ A three-layer cognitive architecture that gives AI systems **stable, formed iden
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/nurture-layer.git
-cd nurture-layer
+git clone https://github.com/kossisoroyce/HMT-Zero.git
+cd HMT-Zero
 ```
 
 ### 2. Backend Setup
@@ -136,7 +136,7 @@ Open http://localhost:5173 in your browser.
 ## Project Structure
 
 ```
-nurture-layer/
+HMT-Zero/
 ├── backend/
 │   ├── main.py                 # FastAPI application entry
 │   ├── requirements.txt        # Python dependencies
@@ -170,7 +170,7 @@ nurture-layer/
 │   └── vite.config.js
 │
 ├── docs/                      # Documentation
-│   ├── nurture-layer.md       # Nurture Layer paper
+│   ├── HMT-Zero.md       # Nurture Layer paper
 │   └── experiential-layer.md  # Experiential Layer spec
 │
 └── experiments/               # Experimental results
@@ -229,7 +229,7 @@ The Nurture Layer defended its formed character when other conditions folded.
 
 ## Documentation
 
-- **[Nurture Layer Paper](docs/nurture-layer.md)** — Core architecture and theory
+- **[Nurture Layer Paper](docs/HMT-Zero.md)** — Core architecture and theory
 - **[Experiential Layer Spec](docs/experiential-layer.md)** — Session memory system
 - **[Self-Stimulation Paper](CACA_Self_Stimulation_Technical_Paper.md)** — Autonomous cognition
 

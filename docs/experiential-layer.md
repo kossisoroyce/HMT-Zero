@@ -8,13 +8,13 @@
 
 ## Abstract
 
-The Experiential Layer completes the three-layer CACA architecture, providing fully plastic runtime learning bounded by the frozen Nature layer and stabilized Nurture layer. Unlike Nurture, which shapes lasting character during a formative period, Experience handles moment-to-moment adaptation: tracking conversation dynamics, accumulating session context, and enabling short-term learning without destabilizing long-term identity. This paper specifies the architecture, update mechanisms, bounding functions, and integration points for the Experiential Layer.
+The Experiential Layer completes the three-layer HMT-Zero architecture, providing fully plastic runtime learning bounded by the frozen Nature layer and stabilized Nurture layer. Unlike Nurture, which shapes lasting character during a formative period, Experience handles moment-to-moment adaptation: tracking conversation dynamics, accumulating session context, and enabling short-term learning without destabilizing long-term identity. This paper specifies the architecture, update mechanisms, bounding functions, and integration points for the Experiential Layer.
 
 ---
 
 ## 1. Introduction
 
-The CACA architecture proposes three layers of model state:
+The HMT-Zero architecture proposes three layers of model state:
 
 **Nature**: Frozen weights from training. Provides capabilities, values, and evaluative functions. Never changes after deployment. Shared across all instances.
 
@@ -1223,7 +1223,7 @@ Without the Experiential Layer, self-stimulation has nowhere to go. With it, the
 
 ## 12. Conclusion
 
-The Experiential Layer completes the three-layer CACA architecture:
+The Experiential Layer completes the three-layer HMT-Zero architecture:
 
 - **Nature** provides frozen capabilities and values
 - **Nurture** provides stable individual character
@@ -1243,8 +1243,8 @@ The implementation path is clear. The architecture is specified. The connection 
 
 ## References
 
-- CACA Research Framework (Electric Sheep Africa, 2024)
-- CACA Addendum: Self-Stimulation Architecture (Electric Sheep Africa, 2024)
+- HMT-Zero Research Framework (Electric Sheep Africa, 2024)
+- HMT-Zero Addendum: Self-Stimulation Architecture (Electric Sheep Africa, 2024)
 - The Nurture Layer: Technical Framework (Electric Sheep Africa, 2024)
 
 ---

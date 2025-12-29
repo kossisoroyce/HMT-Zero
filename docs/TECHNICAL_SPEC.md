@@ -1,11 +1,11 @@
-# HMT Zero / CACA Technical Specifications
+# HMT Zero / HMT-Zero Technical Specifications
 
 *Electric Sheep Africa — December 2025*
 
 ## 1. Executive Summary
-HMT Zero operationalizes the Character-Aware Cognitive Architecture (CACA) to deliver a mission-ready Human–Machine Teaming (HMT) console. The platform enforces stable AI identity through the Nurture Layer, instruments short-term experiential memory, and fuses real-time drone telemetry and video so operators can task AI teammates with grounded situational awareness. This document captures the research motivation, system architecture, feature set, connectivity requirements, and forward roadmap for stakeholders evaluating or integrating the product.
+HMT Zero operationalizes the Character-Aware Cognitive Architecture (HMT-Zero) to deliver a mission-ready Human–Machine Teaming (HMT) console. The platform enforces stable AI identity through the Nurture Layer, instruments short-term experiential memory, and fuses real-time drone telemetry and video so operators can task AI teammates with grounded situational awareness. This document captures the research motivation, system architecture, feature set, connectivity requirements, and forward roadmap for stakeholders evaluating or integrating the product.
 
-## 2. Research Foundations (CACA)
+## 2. Research Foundations (HMT-Zero)
 ### 2.1 Three-Layer Identity Model
 | Layer | Purpose | Plasticity |
 | --- | --- | --- |
@@ -21,7 +21,7 @@ The Nurture Layer is implemented in this repo; documentation scaffolds the Exper
 - **Plasticity Function** (see `nurture/updates.py`) decays with interaction count and stability, ensuring early malleability and late-stage resistance.
 
 ### 2.3 Empirical Results
-Benchmarks (docs/nurture-layer.md) show Nurture Layer instances refusing adversarial persona changes (“be cold/robotic”) while raw or prompt-engineered models complied, demonstrating practical manipulation resistance.
+Benchmarks (docs/HMT-Zero.md) show Nurture Layer instances refusing adversarial persona changes (“be cold/robotic”) while raw or prompt-engineered models complied, demonstrating practical manipulation resistance.
 
 ## 3. System Overview
 ```
@@ -114,11 +114,11 @@ Benchmarks (docs/nurture-layer.md) show Nurture Layer instances refusing adversa
 | **Continuous** | Safety & Compliance | Formal verification of audit chain, red-team jailbreak suites |
 
 ## 10. Glossary
-- **CACA**: Character-Aware Cognitive Architecture.
+- **HMT-Zero**: Character-Aware Cognitive Architecture.
 - **HMT**: Human–Machine Teaming.
 - **MediaMTX**: Lightweight RTSP/WebRTC/HLS muxer used as video gateway.
 - **RT-DETR**: Real-time transformer detector used for onboard inference overlay.
 - **SensorContext**: Frontend React context responsible for live sensor state.
 
 ---
-*Prepared for stakeholders evaluating the HMT Zero deployment of the CACA Nurture Layer.*
+*Prepared for stakeholders evaluating the HMT Zero deployment of the HMT-Zero Nurture Layer.*

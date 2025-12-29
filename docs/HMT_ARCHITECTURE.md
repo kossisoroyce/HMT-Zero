@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines how to extend the CACA (Continuous AI Consciousness Architecture) to support Human-Machine Teaming research. The goal is to create an AI system that:
+This document outlines how to extend the HMT-Zero (Continuous AI Consciousness Architecture) to support Human-Machine Teaming research. The goal is to create an AI system that:
 
 1. Develops calibrated trust with human operators
 2. Explains its reasoning in operator-appropriate ways
